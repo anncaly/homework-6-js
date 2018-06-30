@@ -1,9 +1,3 @@
-var HEROES_NAMES   = ['Lian', 'Nuklo', 'Broly', 'Vivian', 'Brook', 'Seamus', 'Talus'];
-var MONSTERS_GUIDE = ['Willo', 'Strix', 'Furia', 'Apex', 'Arkon', 'Morbius', 'Guatus'];
-
-var HEROES_TYPE = ['Thief', 'Warrior', 'Wizard'];
-var MONSTERS_TYPE = ['Goblin', 'Orc', 'Vampire'];
-
 function Character(name, type, life, damage){
   this.life = life;
   this.damage = damage;
@@ -11,6 +5,7 @@ function Character(name, type, life, damage){
   this.counter = 2;
   this.name = name;
   this.type = type;
+  // allow/not allow to use opposite superpower
   this.trick = Math.random() >= 0.5;
 }
 
@@ -35,11 +30,6 @@ Character.prototype.isAlive = function() {
 }
 
 Character.prototype.getLife = function() {
-  if(this.life > 0){
-    //console.log("alive");
-  } else {
-    console.log("dead");
-  }
   return this.life;
 }
 
@@ -48,30 +38,32 @@ Character.prototype.shouldUseSkill = function() {
 }
 
 
-
 function Hero() {
   Character.apply(this, arguments);
 }
+
+Hero.HEROES_NAMES = ['Lian', 'Nuklo', 'Broly', 'Vivian', 'Brook', 'Seamus', 'Talus'];
+Hero.HEROES_TYPE  = ['Thief', 'Warrior', 'Wizard'];
 
 Hero.prototype = Object.create(Character.prototype);
 Hero.prototype.constructor = Hero;
 
 Hero.prototype.setLife = function(dmg) {
   if (this.shouldUseSkill()) {
-    this.counter--;   
+    this.counter--;
+    console.log("Own superpower is used by " + this.name);
   } else {
-      this.life -= dmg;
-    } 
+    this.life -= dmg;
+  } 
 }
 
-Hero.prototype.getEnemyPower = function() {
-  if(this.trick) {
-    if (this.shouldUseSkill()) {
-      this.counter--;
-      return this.damage*2;
-    }
-    return this.damage;
+Hero.prototype.getDamage = function() {
+  if (this.shouldUseSkill() && this.trick) {
+    this.counter--;
+    console.log("Opposite superpower is used by " + this.name);
+    return this.damage*2;
   }
+  return this.damage;
 }
 
 
@@ -79,24 +71,30 @@ function Monster() {
   Character.apply(this, arguments);
 }
 
+Monster.MONSTERS_GUIDE = ['Willo', 'Strix', 'Furia', 'Apex', 'Arkon', 'Morbius', 'Guatus'];
+Monster.MONSTERS_TYPE  = ['Goblin', 'Orc', 'Vampire'];
+
 Monster.prototype = Object.create(Character.prototype);
 Monster.prototype.constructor = Monster;
 
 Monster.prototype.getDamage = function() {
   if (this.shouldUseSkill()) {
     this.counter--;
+    console.log("Own superpower is used by " + this.name);
     return this.damage*2;
   }
   return this.damage;
 }
-
-Monster.prototype.getEnemyPower = function(dmg) {
-  if(this.trick) {
-    if (this.shouldUseSkill()) {
-      this.counter--;   
-    }
-  }
+ 
+Monster.prototype.setLife = function(dmg) {
+  if (this.shouldUseSkill() && this.trick) {
+    this.counter--; 
+    console.log("Opposite superpower is used by " + this.name);
+  } else {
+    this.life -= dmg;
+  } 
 }
+
 
 function monsterFactory(name, type) {
   var life;
@@ -119,7 +117,9 @@ function monsterFactory(name, type) {
           damage = 90;
           break;
       default:
-          console.log("There is no such type of Monster");
+          life = 0;
+          damage = 0;
+          break;
   }
   return new Monster(name, type, life, damage);
 }
@@ -145,7 +145,9 @@ function heroFactory(name, type) {
           damage = 50;
           break;
       default:
-          console.log("There is no such type of Hero");
+          life = 0;
+          damage = 0;
+          break;
   }
   return new Hero(name, type, life, damage);
 }
@@ -155,24 +157,21 @@ function Tournament(amount) {
   this.amount = amount;
 }
 
-
 Tournament.prototype.register = function() {
   var args = Array.prototype.slice.call(arguments);
+  console.log('Number of all applications for tournament: ' + args.length);
   var filtered_players = this.faceControl.apply(this, args);
-  //console.log(players);
   this.players = [];
-    for (var i = 0; i < filtered_players.length; i++) {
-      if (this.players.length < this.amount) {
-        this.players.push(filtered_players[i]);
-        console.log('All players has been registered');
-      } else {
-        console.log('Required amount of players has already been registered');
-        break;
-      }
-    }  
-  console.log('Number of players: ' + this.players.length);
-  //console.log(this.players);
-  //return filtered_players;
+  for (var i = 0; i < filtered_players.length; i++) {
+    if (this.players.length < this.amount) {
+      this.players.push(filtered_players[i]);
+      console.log('All valid players have been registered');
+    } else {
+      console.log('Required amount of players has already been registered, the registration is stopped');
+      break;
+    }
+  }  
+  console.log('Number of players admitted to tournament: ' + this.players.length);
 }
 
     
@@ -180,20 +179,20 @@ Tournament.prototype.faceControl = function() {
   var args = Array.prototype.slice.call(arguments);
   var filtered_players = [];
   for (var i = 0; i < args.length; i++) {
-    if (args[i] instanceof Monster && MONSTERS_GUIDE.indexOf(args[i].name) == -1) {
-       console.log("not allowed monster name");
+    if (args[i] instanceof Monster && Monster.MONSTERS_GUIDE.indexOf(args[i].name) == -1) {
+       console.log(args[i].name + " is not allowed monster name");
        continue;
     }
-    if (args[i] instanceof Monster && MONSTERS_TYPE.indexOf(args[i].type) == -1) {
-       console.log("not allowed monster type");
+    if (args[i] instanceof Monster && Monster.MONSTERS_TYPE.indexOf(args[i].type) == -1) {
+       console.log(args[i].type + " is not allowed monster type");
        continue;
     }
-    if (args[i] instanceof Hero && HEROES_NAMES.indexOf(args[i].type) == -1) {
-       console.log("not allowed hero type");
+    if (args[i] instanceof Hero && Hero.HEROES_NAMES.indexOf(args[i].name) == -1) {
+       console.log(args[i].name + " is not allowed hero name");
        continue;
     }
-    if (args[i] instanceof Hero && HEROES_TYPE.indexOf(args[i].type) == -1) {
-       console.log("not allowed hero type");
+    if (args[i] instanceof Hero && Hero.HEROES_TYPE.indexOf(args[i].type) == -1) {
+       console.log(args[i].type + " is not allowed hero type");
        continue;
     }
     filtered_players.push(args[i]);
@@ -201,68 +200,77 @@ Tournament.prototype.faceControl = function() {
   return filtered_players;
 }
 
-Tournament.prototype.splitPairs = function() {}
-
 Tournament.prototype.fight = function() {
   var result = [];
   this.winners = [];
   var awaitingPlayer;
   
   if (this.players.length >= 2) {
+    console.log('-');
+    console.log('Players will be splitted into pairs');
+    
     if (this.players.length % 2) {
       awaitingPlayer = this.players[this.players.length - 1];
-      this.players.splice(-1,1);    
+      if(awaitingPlayer) {
+        console.log('The player is without pair and waiting for fight: ' + awaitingPlayer.name);
+      }
+      this.players.splice(-1,1); 
     } 
+    
+    // split into pairs
     for(var i = 0; i < this.players.length; i += 2) {
        result.push(this.players.slice(i, i + 2));
     }
+
     for(var j = 0; j < result.length; j++) {
       var first = result[j][0];
       var second = result[j][1];
       this.gameSet(first, second);
     }
-    console.log('winner');
-    console.log(this.winners);
-    if (awaitingPlayer) {
-      this.winners.push(awaitingPlayer);
-    }
+    
     this.players = this.winners;
-    console.log(this.players);
-    if (this.players.length == 1) {
-       console.log("that's all");
+    if (awaitingPlayer) {
+      this.players.unshift(awaitingPlayer);
+      console.log('! Player added: ' + awaitingPlayer.name);
     }
     this.fight();
   } else {
-    console.log("There is a winner! Tournament is over");
+    console.log("-");
+    console.log("There is a winner! " + this.players[0].name + " has made everyone!");
+    console.log("Tournament is over");
   }
 }
 
-
 Tournament.prototype.gameSet = function(first, second) {
+  console.log("---");
+  console.log("pair: " + first.type + ' ' + first.name + ' and ' + second.type + ' ' + second.name);
+  console.log(first.name + ' hp: ' + first.life + ' damage: ' + first.damage + ' trick: ' + first.trick);
+  console.log(second.name + ' hp: '  + second.life + ' damage: ' + second.damage + ' trick: ' + second.trick);
+  console.log("-");
   while (first.isAlive() && second.isAlive()) {
-    second.attack(first);
-    console.log('Хп 1 игрока: ' + first.getLife());
+    first.attack(second);
+    console.log(first.name + ' attacks ' + second.name);
+    console.log('hp 2 player ' + second.name + ' ' + second.getLife());
    
-    if(first.isAlive()) {
-      first.attack(second);
-      console.log('Хп 2 игрока: ' + second.getLife());
+    if(second.isAlive()) {
+      second.attack(first);
+      console.log(second.name + ' attacks '  + first.name);
+      console.log('hp 1 player ' + first.name + ' ' + first.getLife());
     } 
   }
   if(!first.isAlive()) {
-    console.log("2 won");
+    console.log(second.name + " won");
     this.winners.push(second);
     second.updateLife();
   } else if (!second.isAlive()) {
-      console.log("1 won");
+      console.log(first.name + " won");
       this.winners.push(first);
       first.updateLife();
     }
-    //console.log(this.winners);
 }
 
 
-var myTournament = new Tournament(8);
+var myTournament = new Tournament(10);
 
-myTournament.register(monsterFactory('Willo', 'Orc'), monsterFactory('Arkon', 'Goblin'), heroFactory('Lian', 'Thief'), monsterFactory('Apex', 'Goblin'), monsterFactory('Willo', 'Vampire'), monsterFactory('Willo', 'Goblin'), monsterFactory('Talus', 'Warrior'), monsterFactory('Morbius', 'Vampire'), heroFactory('Nuklo', 'Archer'));
+myTournament.register(monsterFactory('Willo', 'Orc'), monsterFactory('Arkon', 'Goblin'), heroFactory('Lian', 'Thief'), monsterFactory('Apex', 'Goblin'), monsterFactory('Strix', 'Vampire'), monsterFactory('Guatus', 'Goblin'), monsterFactory('Talus', 'Warrior'), monsterFactory('Morbius', 'Vampire'), heroFactory('Nuklo', 'Archer'), heroFactory('Broly', 'Wizard'), monsterFactory('Furia', 'Orc'));
 myTournament.fight();
-//console.log(monsterFactory('Willo', 'Orc'), heroFactory('Olly', 'Thief'));
