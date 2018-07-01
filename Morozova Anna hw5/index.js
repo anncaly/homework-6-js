@@ -15,6 +15,7 @@ Character.prototype.setLife = function(dmg) {
 
 Character.prototype.updateLife = function() {
   this.life = this.maxLife;
+  this.counter = 2;
 }
 
 Character.prototype.getDamage = function() {
@@ -201,7 +202,6 @@ Tournament.prototype.faceControl = function() {
 }
 
 Tournament.prototype.fight = function() {
-  var result = [];
   this.winners = [];
   var awaitingPlayer;
   
@@ -209,22 +209,11 @@ Tournament.prototype.fight = function() {
     console.log('-');
     console.log('Players will be splitted into pairs');
     
-    if (this.players.length % 2) {
-      awaitingPlayer = this.players[this.players.length - 1];
-      if(awaitingPlayer) {
-        console.log('The player is without pair and waiting for fight: ' + awaitingPlayer.name);
-      }
-      this.players.splice(-1,1); 
-    } 
+    this.splitPairs(this.players);
     
-    // split into pairs
-    for(var i = 0; i < this.players.length; i += 2) {
-       result.push(this.players.slice(i, i + 2));
-    }
-
-    for(var j = 0; j < result.length; j++) {
-      var first = result[j][0];
-      var second = result[j][1];
+    for(var j = 0; j < this.result.length; j++) {
+      var first = this.result[j][0];
+      var second = this.result[j][1];
       this.gameSet(first, second);
     }
     
@@ -238,6 +227,23 @@ Tournament.prototype.fight = function() {
     console.log("-");
     console.log("There is a winner! " + this.players[0].name + " has made everyone!");
     console.log("Tournament is over");
+  }
+}
+
+Tournament.prototype.splitPairs = function(players) { 
+  this.players = players;
+  this.result = [];
+  
+  if (this.players.length % 2) {
+    awaitingPlayer = this.players[this.players.length - 1];
+    if(awaitingPlayer) {
+      console.log('The player is without pair and waiting for fight: ' + awaitingPlayer.name);
+    }
+    this.players.splice(-1,1); 
+  } 
+
+  for(var i = 0; i < this.players.length; i += 2) {
+     this.result.push(this.players.slice(i, i + 2));
   }
 }
 
