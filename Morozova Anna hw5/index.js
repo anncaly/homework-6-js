@@ -38,7 +38,6 @@ Character.prototype.shouldUseSkill = function() {
   return (this.life < this.maxLife/2 && this.counter > 0); 
 }
 
-
 function Hero() {
   Character.apply(this, arguments);
 }
@@ -67,7 +66,6 @@ Hero.prototype.getDamage = function() {
   return this.damage;
 }
 
-
 function Monster() {
   Character.apply(this, arguments);
 }
@@ -95,7 +93,6 @@ Monster.prototype.setLife = function(dmg) {
     this.life -= dmg;
   } 
 }
-
 
 function monsterFactory(name, type) {
   var life;
@@ -153,7 +150,6 @@ function heroFactory(name, type) {
   return new Hero(name, type, life, damage);
 }
 
-
 function Tournament(amount) {
   this.amount = amount;
 }
@@ -166,16 +162,16 @@ Tournament.prototype.register = function() {
   for (var i = 0; i < filtered_players.length; i++) {
     if (this.players.length < this.amount) {
       this.players.push(filtered_players[i]);
-      console.log('All valid players have been registered');
+      console.log(filtered_players[i].name + ' has been registered');
     } else {
       console.log('Required amount of players has already been registered, the registration is stopped');
       break;
     }
-  }  
+  }
+  console.log('All valid players have been registered');
   console.log('Number of players admitted to tournament: ' + this.players.length);
 }
 
-    
 Tournament.prototype.faceControl = function() {
   var args = Array.prototype.slice.call(arguments);
   var filtered_players = [];
@@ -204,19 +200,15 @@ Tournament.prototype.faceControl = function() {
 Tournament.prototype.fight = function() {
   this.winners = [];
   var awaitingPlayer;
-  
   if (this.players.length >= 2) {
     console.log('-');
     console.log('Players will be splitted into pairs');
-    
     this.splitPairs(this.players);
-    
     for(var j = 0; j < this.result.length; j++) {
       var first = this.result[j][0];
       var second = this.result[j][1];
       this.gameSet(first, second);
     }
-    
     this.players = this.winners;
     if (awaitingPlayer) {
       this.players.unshift(awaitingPlayer);
@@ -233,7 +225,6 @@ Tournament.prototype.fight = function() {
 Tournament.prototype.splitPairs = function(players) { 
   this.players = players;
   this.result = [];
-  
   if (this.players.length % 2) {
     awaitingPlayer = this.players[this.players.length - 1];
     if(awaitingPlayer) {
@@ -241,7 +232,6 @@ Tournament.prototype.splitPairs = function(players) {
     }
     this.players.splice(-1,1); 
   } 
-
   for(var i = 0; i < this.players.length; i += 2) {
      this.result.push(this.players.slice(i, i + 2));
   }
@@ -257,7 +247,6 @@ Tournament.prototype.gameSet = function(first, second) {
     first.attack(second);
     console.log(first.name + ' attacks ' + second.name);
     console.log('hp 2 player ' + second.name + ' ' + second.getLife());
-   
     if(second.isAlive()) {
       second.attack(first);
       console.log(second.name + ' attacks '  + first.name);
@@ -272,11 +261,21 @@ Tournament.prototype.gameSet = function(first, second) {
       console.log(first.name + " won");
       this.winners.push(first);
       first.updateLife();
-    }
+  }
 }
 
-
 var myTournament = new Tournament(10);
-
-myTournament.register(monsterFactory('Willo', 'Orc'), monsterFactory('Arkon', 'Goblin'), heroFactory('Lian', 'Thief'), monsterFactory('Apex', 'Goblin'), monsterFactory('Strix', 'Vampire'), monsterFactory('Guatus', 'Goblin'), monsterFactory('Talus', 'Warrior'), monsterFactory('Morbius', 'Vampire'), heroFactory('Nuklo', 'Archer'), heroFactory('Broly', 'Wizard'), monsterFactory('Furia', 'Orc'));
+myTournament.register(
+  monsterFactory('Willo', 'Orc'), 
+  monsterFactory('Arkon', 'Goblin'), 
+  heroFactory('Lian', 'Thief'), 
+  monsterFactory('Apex', 'Goblin'), 
+  monsterFactory('Strix', 'Vampire'), 
+  monsterFactory('Guatus', 'Goblin'), 
+  monsterFactory('Talus', 'Warrior'), 
+  monsterFactory('Morbius', 'Vampire'), 
+  heroFactory('Nuklo', 'Archer'), 
+  heroFactory('Broly', 'Wizard'), 
+  monsterFactory('Furia', 'Orc')
+);
 myTournament.fight();
